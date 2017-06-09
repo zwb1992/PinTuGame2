@@ -1,9 +1,12 @@
 package com.zwb.pintugame2;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
+
+import com.zwb.pintugame2.view.PinTuView;
 
 import java.util.Random;
 
@@ -29,8 +32,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void resetRowColumn(View view) {
-        int row = new Random().nextInt(5) + 3;
-        int column = new Random().nextInt(5) + 3;
-        gl.setRowColumn(row,column);
+        int row = new Random().nextInt(3) + 3;
+        gl.setRowColumn(row, row);
     }
+
+    public void otherImpl(View view) {
+        Intent intent = new Intent(this, SecondActivity.class);
+        startActivity(intent);
+    }
+
+
 }

@@ -9,7 +9,7 @@
     tools:context="com.zwb.pintugame2.MainActivity">
 
 
-    <com.zwb.pintugame2.PinTuView
+    <com.zwb.pintugame2.view.PinTuView
         android:id="@+id/gl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,4 +24,11 @@
         android:layout_height="wrap_content"
         android:onClick="resetRowColumn"
         android:text="随机设置行列" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:onClick="otherImpl"
+        android:text="拼图的另外实现" />
 </RelativeLayout>

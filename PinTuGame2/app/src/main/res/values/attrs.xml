@@ -4,4 +4,9 @@
     <declare-styleable name="PinTuView">
         <attr name="bitmap" />
     </declare-styleable>
+    <attr name="mColumn" format="integer" />
+    <declare-styleable name="PinTuView2">
+        <attr name="bitmap" />
+        <attr name="mColumn" />
+    </declare-styleable>
 </resources>

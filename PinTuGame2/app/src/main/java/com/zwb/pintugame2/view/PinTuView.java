@@ -1,4 +1,4 @@
-package com.zwb.pintugame2;
+package com.zwb.pintugame2.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
@@ -16,11 +15,14 @@ import android.view.animation.TranslateAnimation;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 
+import com.zwb.pintugame2.GameData;
+import com.zwb.pintugame2.R;
+
 import java.util.Random;
 
 /**
  * Created by zwb
- * Description 美女平图控件
+ * Description 美女平图控件--基于GridLayout
  * Date 2017/6/9.
  */
 
@@ -89,7 +91,6 @@ public class PinTuView extends GridLayout {
                         if (gameOver || isAnim) {
                             return;
                         }
-                        Log.e("info", "--onclick---" + v + "--mStart--" + mStartImageView);
                         ImageView srcImageView = (ImageView) v;
                         if (mStartImageView == null) {
                             mStartImageView = srcImageView;
@@ -110,7 +111,7 @@ public class PinTuView extends GridLayout {
             }
         }
         init = false;
-//        randomPosition();
+        randomPosition();
         init = true;//打乱顺序完成
     }
 
@@ -166,7 +167,6 @@ public class PinTuView extends GridLayout {
         endAnim.setInterpolator(new LinearInterpolator());
         endAnim.setFillAfter(true);
         srcImageView.startAnimation(endAnim);
-//        switchData(srcImageView);
     }
 
     /**
@@ -193,7 +193,7 @@ public class PinTuView extends GridLayout {
         srcImageView.setImageBitmap(((BitmapDrawable) mStartImageView.getDrawable()).getBitmap());
         mStartImageView.setImageBitmap(bitmap);
         mStartImageView = null;
-        if (isGameOver() && init) {
+        if (isCompleted() && init) {
             gameOver = true;
             if (callBack != null) {
                 callBack.completed();
@@ -206,7 +206,7 @@ public class PinTuView extends GridLayout {
      *
      * @return true
      */
-    private boolean isGameOver() {
+    private boolean isCompleted() {
         for (int i = 0; i < rowCount; i++) {
             for (int j = 0; j < columnCount; j++) {
                 GameData gameData = (GameData) imageViews[i][j].getTag();
@@ -225,12 +225,13 @@ public class PinTuView extends GridLayout {
         //打乱的次数
         int count = 50;
         for (int i = 0; i < count; i++) {
+            mStartImageView = imageViews[rowCount - 1][columnCount - 1];
             int x = new Random().nextInt(rowCount);
             int y = new Random().nextInt(columnCount);
-            GameData blankData = (GameData) imageViews[rowCount - 1][columnCount - 1].getTag();
+            GameData blankData = (GameData) mStartImageView.getTag();
             //与最后一个图块交换位置。如果是同一个位置就不交换
             if (x != blankData.getX() || y != blankData.getY()) {
-                changePosition(imageViews[x][y]);
+                switchData(imageViews[x][y]);
             }
         }
     }
