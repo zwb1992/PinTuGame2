@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.animation.Animation;
@@ -19,6 +18,8 @@ import android.widget.RelativeLayout;
 import com.zwb.pintugame2.GameData;
 import com.zwb.pintugame2.R;
 import com.zwb.pintugame2.utils.ImageCut;
+
+import java.util.Random;
 
 /**
  * Created by zwb
@@ -50,6 +51,11 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
      * 每个图块之间的间距
      */
     private int mMargin = 3;
+    private RelativeLayout mAnimLayout = null;//动画层
+    /**
+     * 每个图块的宽高
+     */
+    private int mChildWidth;
 
     public PinTuView2(Context context) {
         this(context, null);
@@ -78,6 +84,7 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         mWidth = Math.min(getMeasuredHeight(), getMeasuredWidth());
         if (!once) {
+            mChildWidth = (mWidth - padding * 2 - (mColumn - 1) * mMargin) / mColumn;
             initImageViews();
             once = true;
         }
@@ -87,8 +94,8 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
     /**
      * 取最小内边距
      *
-     * @param params
-     * @return
+     * @param params padding
+     * @return int
      */
     private int min(int... params) {
         int result = params[0];
@@ -99,7 +106,6 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
     }
 
     private void initImageViews() {
-        int pieceWidth = (mWidth - padding * 2 - (mColumn - 1) * mMargin) / mColumn;
         imageViews = new ImageView[mColumn][mColumn];
         Bitmap[][] bitmaps = new ImageCut(bitmap).cutBitmap(mColumn);
         for (int i = 0; i < mColumn; i++) {
@@ -110,7 +116,7 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
                 imageViews[i][j].setTag(new GameData(i, j, bitmaps[i][j]));
                 int id = i * mColumn + j + 1;//id不能为0，所以要加上1
                 imageViews[i][j].setId(id);
-                RelativeLayout.LayoutParams lp = new LayoutParams(pieceWidth, pieceWidth);
+                RelativeLayout.LayoutParams lp = new LayoutParams(mChildWidth, mChildWidth);
                 if (i != 0) {//不是第一行
                     lp.topMargin = mMargin;
                     lp.addRule(RelativeLayout.BELOW, imageViews[i - 1][0].getId());
@@ -120,6 +126,27 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
                     lp.addRule(RelativeLayout.RIGHT_OF, imageViews[0][j - 1].getId());
                 }
                 addView(imageViews[i][j], lp);
+            }
+        }
+        init = false;
+        randomPosition();
+        init = true;
+    }
+
+    /**
+     * 打乱顺序
+     */
+    private void randomPosition() {
+        //打乱的次数
+        int count = 50;
+        for (int i = 0; i < count; i++) {
+            mStartImageView = imageViews[mColumn - 1][mColumn - 1];
+            int x = new Random().nextInt(mColumn);
+            int y = new Random().nextInt(mColumn);
+            GameData blankData = (GameData) mStartImageView.getTag();
+            //与最后一个图块交换位置。如果是同一个位置就不交换
+            if (x != blankData.getX() || y != blankData.getY()) {
+                switchData(imageViews[x][y]);
             }
         }
     }
@@ -152,10 +179,27 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
      * @param srcImageView 要交换位置的imageView
      */
     private void changePosition(final ImageView srcImageView) {
+        mStartImageView.setColorFilter(null);
+        srcImageView.setColorFilter(null);
         int startX = mStartImageView.getLeft();
         int startY = mStartImageView.getTop();
         int endX = srcImageView.getLeft();
         int endY = srcImageView.getTop();
+        setUpAnimLayout();
+        final ImageView firstView = new ImageView(getContext());
+        firstView.setImageBitmap(((BitmapDrawable) mStartImageView.getDrawable()).getBitmap());
+        RelativeLayout.LayoutParams lp = new LayoutParams(mChildWidth, mChildWidth);
+        lp.leftMargin = mStartImageView.getLeft() - getPaddingLeft();
+        lp.topMargin = mStartImageView.getTop() - getPaddingTop();
+        mAnimLayout.addView(firstView, lp);
+
+        final ImageView secondView = new ImageView(getContext());
+        secondView.setImageBitmap(((BitmapDrawable) srcImageView.getDrawable()).getBitmap());
+        lp = new LayoutParams(mChildWidth, mChildWidth);
+        lp.leftMargin = srcImageView.getLeft() - getPaddingLeft();
+        lp.topMargin = srcImageView.getTop() - getPaddingTop();
+        mAnimLayout.addView(secondView, lp);
+
         TranslateAnimation startAnim = new TranslateAnimation(0, endX - startX, 0, endY - startY);
         startAnim.setDuration(2000);
         startAnim.setFillAfter(true);
@@ -164,11 +208,16 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
             @Override
             public void onAnimationStart(Animation animation) {
                 isAnim = true;
+                mStartImageView.setVisibility(INVISIBLE);
+                srcImageView.setVisibility(INVISIBLE);
             }
 
             @Override
             public void onAnimationEnd(Animation animation) {
                 switchData(srcImageView);
+                firstView.clearAnimation();
+                secondView.clearAnimation();
+                mAnimLayout.removeAllViews();
                 isAnim = false;
             }
 
@@ -177,12 +226,19 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
 
             }
         });
-        mStartImageView.startAnimation(startAnim);
+        firstView.startAnimation(startAnim);
         TranslateAnimation endAnim = new TranslateAnimation(0, startX - endX, 0, startY - endY);
         endAnim.setDuration(2000);
         endAnim.setInterpolator(new LinearInterpolator());
         endAnim.setFillAfter(true);
-        srcImageView.startAnimation(endAnim);
+        secondView.startAnimation(endAnim);
+    }
+
+    private void setUpAnimLayout() {
+        if (mAnimLayout == null) {
+            mAnimLayout = new RelativeLayout(getContext());
+            addView(mAnimLayout);
+        }
     }
 
     /**
@@ -193,8 +249,6 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
     private void switchData(ImageView srcImageView) {
         mStartImageView.clearAnimation();
         srcImageView.clearAnimation();
-        mStartImageView.setColorFilter(null);
-        srcImageView.setColorFilter(null);
         GameData srcData = (GameData) srcImageView.getTag();
         GameData dstData = (GameData) mStartImageView.getTag();
         Bitmap bitmap = ((BitmapDrawable) srcImageView.getDrawable()).getBitmap();
@@ -208,6 +262,8 @@ public class PinTuView2 extends RelativeLayout implements View.OnClickListener {
         dstData.setP_y(tempY);
         srcImageView.setImageBitmap(((BitmapDrawable) mStartImageView.getDrawable()).getBitmap());
         mStartImageView.setImageBitmap(bitmap);
+        mStartImageView.setVisibility(VISIBLE);
+        srcImageView.setVisibility(VISIBLE);
         mStartImageView = null;
         if (isCompleted() && init) {
             gameOver = true;

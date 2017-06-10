@@ -3,11 +3,14 @@
     xmlns:zwb="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#ccc"
     android:orientation="vertical">
 
     <com.zwb.pintugame2.view.PinTuView2
+        android:id="@+id/pt2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#fff"
         android:padding="3dp"
         zwb:bitmap="@mipmap/pintu"
         zwb:mColumn="3" />

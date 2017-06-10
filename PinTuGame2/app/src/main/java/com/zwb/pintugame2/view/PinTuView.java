@@ -136,6 +136,8 @@ public class PinTuView extends GridLayout {
      * @param srcImageView 要交换位置的imageView
      */
     private void changePosition(final ImageView srcImageView) {
+        mStartImageView.setColorFilter(null);
+        srcImageView.setColorFilter(null);
         int startX = mStartImageView.getLeft();
         int startY = mStartImageView.getTop();
         int endX = srcImageView.getLeft();
@@ -177,8 +179,6 @@ public class PinTuView extends GridLayout {
     private void switchData(ImageView srcImageView) {
         mStartImageView.clearAnimation();
         srcImageView.clearAnimation();
-        mStartImageView.setColorFilter(null);
-        srcImageView.setColorFilter(null);
         GameData srcData = (GameData) srcImageView.getTag();
         GameData dstData = (GameData) mStartImageView.getTag();
         Bitmap bitmap = ((BitmapDrawable) srcImageView.getDrawable()).getBitmap();
